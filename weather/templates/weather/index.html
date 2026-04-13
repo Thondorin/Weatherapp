@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Wetterapp</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{background:#0f172a;color:#f1f5f9;font-family:'Inter',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem}
+        h1{font-size:2rem;font-weight:600;margin-bottom:2rem;letter-spacing:-.03em}
+        h1 span{color:#38bdf8}
+        .search-form{display:flex;gap:.75rem;margin-bottom:2rem;width:100%;max-width:440px}
+        input[type=text]{flex:1;padding:.8rem 1.2rem;border:none;border-radius:999px;background:#1e293b;color:#f1f5f9;font-family:'Inter',sans-serif;font-size:.95rem;outline:none}
+        input[type=text]::placeholder{color:#64748b}
+        input[type=text]:focus{background:#273549}
+        button{background:#38bdf8;color:#0f172a;border:none;padding:.8rem 1.5rem;border-radius:999px;font-family:'Inter',sans-serif;font-size:.9rem;font-weight:600;cursor:pointer}
+        button:hover{background:#7dd3fc}
+        .error{color:#f87171;font-size:.9rem;margin-bottom:1rem}
+        .card{background:#1e293b;border-radius:24px;padding:2.5rem;max-width:440px;width:100%;text-align:center}
+        .city{font-size:1.5rem;font-weight:600;margin-bottom:.25rem}
+        .country{color:#64748b;font-size:.85rem;margin-bottom:1rem}
+        .icon{width:80px;height:80px}
+        .description{color:#94a3b8;font-size:.95rem;text-transform:capitalize;margin-bottom:1.5rem}
+        .temp{font-size:4rem;font-weight:300;letter-spacing:-.04em;margin-bottom:.25rem}
+        .temp span{font-size:2rem;color:#64748b}
+        .details{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-top:1.5rem;padding-top:1.5rem;border-top:0.5px solid #334155}
+        .detail-label{font-size:.7rem;color:#64748b;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.25rem}
+        .detail-value{font-size:1rem;font-weight:600}
+    </style>
+</head>
+<body>
+    <h1>Wetter<span>app</span></h1>
+    <form class="search-form" method="POST">
+        {% csrf_token %}
+        <input type="text" name="city" placeholder="Stadt eingeben..." required>
+        <button type="submit">Suchen</button>
+    </form>
+
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
+
+    {% if weather %}
+    <div class="card">
+        <div class="city">{{ weather.city }}</div>
+        <div class="country">{{ weather.country }}</div>
+        <img class="icon" src="https://openweathermap.org/img/wn/{{ weather.icon }}@2x.png" alt="{{ weather.description }}">
+        <div class="description">{{ weather.description }}</div>
+        <div class="temp">{{ weather.temp }}<span>°C</span></div>
+        <div class="details">
+            <div>
+                <div class="detail-label">Gefühlt</div>
+                <div class="detail-value">{{ weather.feels_like }}°</div>
+            </div>
+            <div>
+                <div class="detail-label">Luftfeuchtigkeit</div>
+                <div class="detail-value">{{ weather.humidity }}%</div>
+            </div>
+            <div>
+                <div class="detail-label">Wind</div>
+                <div class="detail-value">{{ weather.wind }} m/s</div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</body>
+</html>
