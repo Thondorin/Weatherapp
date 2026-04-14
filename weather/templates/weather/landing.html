@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Wetterapp – Echtzeitwetter für jede Stadt</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #0f172a;
+            color: #f1f5f9;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Dot grid background */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: radial-gradient(circle, #334155 1px, transparent 1px);
+            background-size: 32px 32px;
+            opacity: 0.25;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Animated background orbs */
+        .bg-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.12;
+            animation: float 10s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .bg-orb-1 { width: 700px; height: 700px; background: #38bdf8; top: -250px; left: -200px; }
+        .bg-orb-2 { width: 500px; height: 500px; background: #818cf8; bottom: -150px; right: -150px; animation-delay: -5s; }
+        .bg-orb-3 { width: 350px; height: 350px; background: #34d399; top: 40%; left: 45%; animation-delay: -2.5s; opacity: 0.07; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-40px) scale(1.06); }
+        }
+
+        /* All content above orbs */
+        nav, section, footer { position: relative; z-index: 1; }
+
+        /* ── Navigation ── */
+        nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            padding: 1.2rem 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            background: rgba(15, 23, 42, 0.75);
+            border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+            z-index: 100;
+        }
+
+        .nav-logo {
+            font-size: 1.2rem;
+            font-weight: 700;
+            letter-spacing: -.04em;
+            text-decoration: none;
+            color: #f1f5f9;
+        }
+        .nav-logo span { color: #38bdf8; }
+
+        .nav-cta {
+            background: #38bdf8;
+            color: #0f172a;
+            border: none;
+            padding: .55rem 1.25rem;
+            border-radius: 999px;
+            font-family: 'Inter', sans-serif;
+            font-size: .85rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background .2s, transform .15s;
+        }
+        .nav-cta:hover { background: #7dd3fc; transform: translateY(-1px); }
+
+        /* ── Hero ── */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 9rem 2rem 5rem;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .45rem;
+            background: rgba(56, 189, 248, 0.08);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            color: #7dd3fc;
+            padding: .4rem 1rem;
+            border-radius: 999px;
+            font-size: .75rem;
+            font-weight: 600;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            margin-bottom: 2.25rem;
+        }
+
+        .hero-title {
+            font-size: clamp(3rem, 9vw, 6.5rem);
+            font-weight: 700;
+            letter-spacing: -.05em;
+            line-height: 1.0;
+            margin-bottom: 1.75rem;
+        }
+
+        .hero-title .accent {
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-sub {
+            font-size: clamp(.95rem, 2.2vw, 1.2rem);
+            color: #94a3b8;
+            max-width: 500px;
+            line-height: 1.75;
+            margin-bottom: 3rem;
+            font-weight: 400;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: #38bdf8;
+            color: #0f172a;
+            border: none;
+            padding: .9rem 2.25rem;
+            border-radius: 999px;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background .2s, transform .15s, box-shadow .2s;
+            box-shadow: 0 0 35px rgba(56, 189, 248, 0.28);
+        }
+        .btn-primary:hover {
+            background: #7dd3fc;
+            transform: translateY(-2px);
+            box-shadow: 0 0 50px rgba(56, 189, 248, 0.45);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: #94a3b8;
+            border: 1px solid #334155;
+            padding: .9rem 2.25rem;
+            border-radius: 999px;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            font-weight: 400;
+            cursor: pointer;
+            text-decoration: none;
+            transition: border-color .2s, color .2s, transform .15s;
+        }
+        .btn-ghost:hover { border-color: #38bdf8; color: #38bdf8; transform: translateY(-2px); }
+
+        /* Scroll indicator */
+        .scroll-hint {
+            margin-top: 5rem;
+            color: #334155;
+            animation: bounce 2.5s ease-in-out infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(10px); }
+        }
+
+        /* ── Section Shared ── */
+        .section-label {
+            color: #38bdf8;
+            font-size: .72rem;
+            font-weight: 600;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            margin-bottom: .9rem;
+        }
+
+        .section-title {
+            font-size: clamp(1.75rem, 4vw, 2.75rem);
+            font-weight: 700;
+            letter-spacing: -.04em;
+            text-align: center;
+            margin-bottom: 1rem;
+            line-height: 1.1;
+        }
+
+        .section-sub {
+            color: #94a3b8;
+            text-align: center;
+            max-width: 460px;
+            line-height: 1.75;
+            margin-bottom: 4rem;
+            font-size: .95rem;
+        }
+
+        /* ── Preview Section ── */
+        .preview-section {
+            padding: 6rem 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .mock-card {
+            background: #1e293b;
+            border-radius: 28px;
+            padding: 2.75rem 2.5rem;
+            max-width: 420px;
+            width: 100%;
+            text-align: center;
+            border: 1px solid #334155;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(56,189,248,0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* subtle top shine */
+        .mock-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 20%; right: 20%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(56,189,248,0.4), transparent);
+        }
+
+        .mock-city { font-size: 1.5rem; font-weight: 600; margin-bottom: .2rem; }
+        .mock-country {
+            color: #64748b;
+            font-size: .8rem;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            margin-bottom: 1.25rem;
+        }
+
+        .mock-icon {
+            font-size: 5rem;
+            line-height: 1;
+            margin-bottom: .75rem;
+            display: block;
+            animation: sway 4s ease-in-out infinite;
+        }
+        @keyframes sway {
+            0%, 100% { transform: rotate(-3deg) scale(1); }
+            50% { transform: rotate(3deg) scale(1.05); }
+        }
+
+        .mock-desc { color: #94a3b8; font-size: .9rem; margin-bottom: 1.5rem; text-transform: capitalize; }
+
+        .mock-temp {
+            font-size: 4.5rem;
+            font-weight: 300;
+            letter-spacing: -.05em;
+            line-height: 1;
+            margin-bottom: .25rem;
+        }
+        .mock-temp span { font-size: 2rem; color: #64748b; }
+
+        .mock-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1.75rem;
+            padding-top: 1.75rem;
+            border-top: 1px solid #334155;
+        }
+        .mock-detail-label {
+            font-size: .65rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: .1em;
+            margin-bottom: .35rem;
+        }
+        .mock-detail-value { font-size: 1rem; font-weight: 600; }
+
+        /* ── Features ── */
+        .features-section {
+            padding: 6rem 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.6);
+            border-top: 1px solid #1e293b;
+            border-bottom: 1px solid #1e293b;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.25rem;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .feature-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 20px;
+            padding: 2rem;
+            transition: border-color .25s, transform .2s, box-shadow .25s;
+        }
+        .feature-card:hover {
+            border-color: rgba(56, 189, 248, 0.35);
+            transform: translateY(-5px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+        }
+
+        .feature-icon {
+            font-size: 2.25rem;
+            margin-bottom: 1.25rem;
+            display: block;
+        }
+
+        .feature-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: .6rem;
+            letter-spacing: -.02em;
+        }
+
+        .feature-desc {
+            color: #64748b;
+            font-size: .875rem;
+            line-height: 1.7;
+        }
+
+        /* ── Stats ── */
+        .stats-section {
+            padding: 5rem 2rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            max-width: 640px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 700;
+            letter-spacing: -.05em;
+            background: linear-gradient(135deg, #38bdf8, #7dd3fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            color: #64748b;
+            font-size: .8rem;
+            margin-top: .4rem;
+            line-height: 1.4;
+        }
+
+        /* ── CTA ── */
+        .cta-section {
+            padding: 7rem 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .cta-card {
+            background: linear-gradient(145deg, #1e293b 0%, #162032 100%);
+            border: 1px solid rgba(56, 189, 248, 0.15);
+            border-radius: 32px;
+            padding: 4.5rem 3rem;
+            max-width: 600px;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 15%; right: 15%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(56,189,248,0.5), transparent);
+        }
+
+        .cta-glow {
+            position: absolute;
+            top: -80px; left: 50%;
+            transform: translateX(-50%);
+            width: 300px; height: 200px;
+            background: rgba(56, 189, 248, 0.1);
+            filter: blur(60px);
+            border-radius: 50%;
+        }
+
+        .cta-title {
+            font-size: clamp(1.75rem, 4vw, 2.5rem);
+            font-weight: 700;
+            letter-spacing: -.04em;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .cta-sub {
+            color: #94a3b8;
+            font-size: .95rem;
+            line-height: 1.75;
+            margin-bottom: 2.5rem;
+            max-width: 420px;
+            margin-left: auto;
+            margin-right: auto;
+            position: relative;
+        }
+
+        /* ── Footer ── */
+        footer {
+            padding: 2rem 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+            color: #475569;
+            font-size: .8rem;
+            border-top: 1px solid #1e293b;
+        }
+
+        footer a { color: #38bdf8; text-decoration: none; }
+        footer a:hover { color: #7dd3fc; }
+
+        /* ── Responsive ── */
+        @media (max-width: 600px) {
+            nav { padding: 1rem 1.5rem; }
+            .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+            .cta-card { padding: 3rem 1.75rem; }
+            footer { justify-content: center; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    <div class="bg-orb bg-orb-3"></div>
+
+    <!-- Navigation -->
+    <nav>
+        <a href="/" class="nav-logo">Wetter<span>app</span></a>
+        <a href="/weather/" class="nav-cta">App starten &rarr;</a>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-badge">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><circle cx="6" cy="6" r="6"/></svg>
+            Echtzeit-Wetterdaten weltweit
+        </div>
+        <h1 class="hero-title">
+            Dein Wetter.<br>
+            <span class="accent">Einfach schön.</span>
+        </h1>
+        <p class="hero-sub">
+            Aktuelle Wetterdaten für jede Stadt weltweit – schnell, präzise und wunderschön dargestellt.
+        </p>
+        <div class="hero-actions">
+            <a href="/weather/" class="btn-primary">Jetzt loslegen &rarr;</a>
+            <a href="#features" class="btn-ghost">Mehr erfahren</a>
+        </div>
+        <div class="scroll-hint">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/>
+            </svg>
+        </div>
+    </section>
+
+    <!-- App Preview -->
+    <section class="preview-section">
+        <div class="section-label">Live-Vorschau</div>
+        <h2 class="section-title">Wetter auf einen Blick</h2>
+        <p class="section-sub">Alle wichtigen Informationen übersichtlich auf einer Karte – klar, modern und intuitiv.</p>
+
+        <div class="mock-card">
+            <div class="mock-city">Berlin</div>
+            <div class="mock-country">DE &nbsp;·&nbsp; Deutschland</div>
+            <span class="mock-icon">⛅</span>
+            <div class="mock-desc">leicht bewölkt</div>
+            <div class="mock-temp">14<span>°C</span></div>
+            <div class="mock-details">
+                <div>
+                    <div class="mock-detail-label">Gefühlt</div>
+                    <div class="mock-detail-value">12°</div>
+                </div>
+                <div>
+                    <div class="mock-detail-label">Luftfeuchtig.</div>
+                    <div class="mock-detail-value">68%</div>
+                </div>
+                <div>
+                    <div class="mock-detail-label">Wind</div>
+                    <div class="mock-detail-value">5 m/s</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features-section" id="features">
+        <div class="section-label">Features</div>
+        <h2 class="section-title">Alles was du brauchst</h2>
+        <p class="section-sub">Entwickelt für Einfachheit und Geschwindigkeit – ohne Ablenkung.</p>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <span class="feature-icon">🌍</span>
+                <div class="feature-title">Weltweit verfügbar</div>
+                <p class="feature-desc">Wetterdaten für jede Stadt auf der ganzen Welt – von Berlin bis Tokio, sofort abrufbar.</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">⚡</span>
+                <div class="feature-title">Echtzeit-Daten</div>
+                <p class="feature-desc">Powered by OpenWeather API – stets aktuelle Wetterdaten, die sich minütlich aktualisieren.</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">🌡️</span>
+                <div class="feature-title">Detaillierte Metriken</div>
+                <p class="feature-desc">Temperatur, gefühlte Temperatur, Luftfeuchtigkeit und Windgeschwindigkeit auf einen Blick.</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">🎨</span>
+                <div class="feature-title">Modernes Design</div>
+                <p class="feature-desc">Klares, dunkles Interface das keine Ablenkung bietet – damit du schnell bekommst was du brauchst.</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">📱</span>
+                <div class="feature-title">Responsive</div>
+                <p class="feature-desc">Optimal auf jedem Gerät – ob Smartphone, Tablet oder Desktop, alles funktioniert einwandfrei.</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">🇩🇪</span>
+                <div class="feature-title">Vollständig auf Deutsch</div>
+                <p class="feature-desc">Alle Wetterbeschreibungen und die Benutzeroberfläche sind vollständig auf Deutsch.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats -->
+    <section class="stats-section">
+        <div class="stats-grid">
+            <div>
+                <div class="stat-value">200+</div>
+                <div class="stat-label">Länder abgedeckt</div>
+            </div>
+            <div>
+                <div class="stat-value">1 Mio.</div>
+                <div class="stat-label">Städte verfügbar</div>
+            </div>
+            <div>
+                <div class="stat-value">60s</div>
+                <div class="stat-label">Update-Intervall</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta-section">
+        <div class="cta-card">
+            <div class="cta-glow"></div>
+            <h2 class="cta-title">Bereit für dein Wetter?</h2>
+            <p class="cta-sub">Gib einfach deinen Stadtnamen ein und erhalte in Sekunden alle wichtigen Wetterdaten.</p>
+            <a href="/weather/">Jetzt loslegen →</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <span>Wetterapp &copy; 2026</span>
+        <span>Powered by <a href="https://openweathermap.org" target="_blank" rel="noopener">OpenWeather API</a></span>
+    </footer>
+</body>
+</html>

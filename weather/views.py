@@ -2,6 +2,11 @@ import requests
 from django.shortcuts import render
 from django.conf import settings
 
+
+def landing(request):
+    return render(request, 'weather/landing.html')
+
+
 def index(request):
     weather_data = None
     error = None

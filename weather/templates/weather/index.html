@@ -29,6 +29,19 @@
     </style>
 </head>
 <body>
+    <a href="/" style="
+    position: fixed;
+    top: 1.2rem;
+    left: 1.5rem;
+    color: #64748b;
+    text-decoration: none;
+    font-size: .85rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    transition: color .2s;
+    z-index: 10;
+    ">← Zurück</a>
     <h1>Wetter<span>app</span></h1>
     <form class="search-form" method="POST">
         {% csrf_token %}
