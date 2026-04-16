@@ -26,6 +26,32 @@
         .details{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-top:1.5rem;padding-top:1.5rem;border-top:0.5px solid #334155}
         .detail-label{font-size:.7rem;color:#64748b;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.25rem}
         .detail-value{font-size:1rem;font-weight:600}
+        .history{margin-top:1.5rem;width:100%;max-width:440px}
+        .history h3{font-size:.75rem;color:#64748b;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.75rem}
+        .history-list{display:flex;flex-wrap:wrap;gap:.5rem}
+        .history-btn{background:#1e293b;border:1px solid #334155;color:#94a3b8;padding:.4rem 1rem;border-radius:999px;font-size:.85rem;cursor:pointer;font-family:'Inter',sans-serif;transition:border-color .2s,color .2s}
+        .history-btn:hover{border-color:#38bdf8;color:#38bdf8}
+        .forecast{background:#1e293b;border-radius:24px;padding:1.5rem 2rem;max-width:440px;width:100%;margin-top:1.5rem}
+        .forecast-title{font-size:.75rem;color:#64748b;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1.25rem}
+        .forecast-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:.5rem;text-align:center}
+        .forecast-day{display:flex;flex-direction:column;align-items:center;gap:.4rem;padding:.75rem .25rem;border-radius:14px;transition:background .2s}
+        .forecast-day:hover{background:#273549}
+        .day-name{font-size:.7rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em}
+        .day-icon{width:40px;height:40px}
+        .day-max{font-size:.95rem;font-weight:600}
+        .day-min{font-size:.8rem;color:#64748b}
+        .forecast-day{cursor:pointer}
+        .forecast-day.active{background:#273549;outline:1px solid #38bdf8}
+        .forecast-detail{display:none;margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid #334155}
+        .forecast-detail.visible{display:block}
+        .slots-grid{display:flex;flex-direction:column;gap:.5rem}
+        .slot{display:grid;grid-template-columns:3rem 2.5rem 1fr auto auto;align-items:center;gap:.75rem;padding:.5rem .25rem;border-radius:10px;transition:background .2s}
+        .slot:hover{background:#1a2740}
+        .slot-time{font-size:.8rem;color:#64748b;font-weight:600}
+        .slot-icon{width:36px;height:36px}
+        .slot-desc{font-size:.85rem;color:#94a3b8;text-transform:capitalize}
+        .slot-temp{font-size:.95rem;font-weight:600;text-align:right}
+        .slot-meta{font-size:.75rem;color:#64748b;text-align:right;line-height:1.6}
     </style>
 </head>
 <body>
@@ -51,6 +77,73 @@
 
     {% if error %}
         <p class="error">{{ error }}</p>
+    {% endif %}
+
+    {% if history %}
+    <div class="history">
+        <h3>Zuletzt gesucht</h3>
+        <div class="history-list">
+            {% for entry in history %}
+            <form method="POST">
+                {% csrf_token %}
+                <button class="history-btn" type="submit" name="city" value="{{ entry.city }}">
+                    {{ entry.city }}
+                </button>
+            </form>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if forecast %}
+    <div class="forecast">
+        <div class="forecast-title">5-Tage-Prognose</div>
+        <div class="forecast-grid">
+            {% for day in forecast %}
+            <div class="forecast-day" onclick="toggleDetail({{ forloop.counter0 }}, this)">
+                <div class="day-name">{{ day.day }}</div>
+                <img class="day-icon" src="https://openweathermap.org/img/wn/{{ day.icon }}@2x.png" alt="">
+                <div class="day-max">{{ day.max }}°</div>
+                <div class="day-min">{{ day.min }}°</div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% for day in forecast %}
+        <div class="forecast-detail" id="detail-{{ forloop.counter0 }}">
+            <div class="slots-grid">
+                {% for slot in day.slots %}
+                <div class="slot">
+                    <span class="slot-time">{{ slot.time }}</span>
+                    <img class="slot-icon" src="https://openweathermap.org/img/wn/{{ slot.icon }}@2x.png" alt="">
+                    <span class="slot-desc">{{ slot.description }}</span>
+                    <span class="slot-temp">{{ slot.temp }}°C</span>
+                    <span class="slot-meta">💧 {{ slot.humidity }}%<br>💨 {{ slot.wind }} m/s</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        let activeIndex = null;
+        function toggleDetail(index, el) {
+            // Alle schließen
+            document.querySelectorAll('.forecast-detail').forEach(d => d.classList.remove('visible'));
+            document.querySelectorAll('.forecast-day').forEach(d => d.classList.remove('active'));
+
+            // Wenn gleicher Tag nochmal geklickt → schließen
+            if (activeIndex === index) {
+                activeIndex = null;
+                return;
+            }
+            // Neuen Tag öffnen
+            document.getElementById('detail-' + index).classList.add('visible');
+            el.classList.add('active');
+            activeIndex = index;
+        }
+    </script>
     {% endif %}
 
     {% if weather %}
