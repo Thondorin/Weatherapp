@@ -284,8 +284,3 @@ Aktuelle Liste generieren mit:
 pip freeze > requirements.txt
 ```
 
----
-
-## Lizenz
-
-MIT License – siehe [LICENSE](LICENSE).
